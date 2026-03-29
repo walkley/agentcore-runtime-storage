@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: EFS for AgentCore Runtime
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  PrivateSubnetA:
+    Type: AWS::EC2::Subnet::Id
+  PrivateSubnetB:
+    Type: AWS::EC2::Subnet::Id
+
+Resources:
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: AgentCore + EFS
+      VpcId: !Ref VpcId
+
+  SecurityGroupSelfIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref SecurityGroup
+      IpProtocol: tcp
+      FromPort: 2049
+      ToPort: 2049
+      SourceSecurityGroupId: !Ref SecurityGroup
+
+  EfsFileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      PerformanceMode: generalPurpose
+      ThroughputMode: elastic
+      Encrypted: true
+
+  MountTargetA:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EfsFileSystem
+      SubnetId: !Ref PrivateSubnetA
+      SecurityGroups: [!Ref SecurityGroup]
+
+  MountTargetB:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EfsFileSystem
+      SubnetId: !Ref PrivateSubnetB
+      SecurityGroups: [!Ref SecurityGroup]
+
+  EcrRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: agentcore-efs-agent
+
+Outputs:
+  FileSystemId:
+    Value: !Ref EfsFileSystem
+  SecurityGroupId:
+    Value: !Ref SecurityGroup
+  Subnets:
+    Value: !Sub "${PrivateSubnetA},${PrivateSubnetB}"
+  EcrRepositoryUri:
+    Value: !GetAtt EcrRepository.RepositoryUri
