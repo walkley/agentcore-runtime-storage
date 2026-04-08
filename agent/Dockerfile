@@ -5,7 +5,7 @@ RUN dnf install -y --setopt=install_weak_deps=False amazon-efs-utils python3.11 
     dnf clean all && rm -rf /var/cache/dnf
 
 WORKDIR /app
-COPY server.py entrypoint.sh ./
+COPY agent/server.py agent/entrypoint.sh ./
 RUN chmod +x entrypoint.sh
 
 EXPOSE 8080

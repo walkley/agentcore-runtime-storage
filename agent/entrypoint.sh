@@ -1,13 +1,12 @@
 #!/bin/bash
 set -e
 
-if [ -n "$EFS_FS_ID" ]; then
-  MOUNT_POINT="${EFS_MOUNT_PATH:-/mnt/efs}"
+if [ -n "$S3FILES_FS_ID" ]; then
+  MOUNT_POINT="${S3FILES_MOUNT_PATH:-/mnt/s3files}"
   mkdir -p "$MOUNT_POINT"
-  mount -t efs -o tls "$EFS_FS_ID" "$MOUNT_POINT" 2>&1 && \
-    echo "EFS mounted at $MOUNT_POINT (TLS)" || \
-    echo "EFS mount failed"
-  /usr/bin/amazon-efs-mount-watchdog &
+  mount -t s3files "$S3FILES_FS_ID:/" "$MOUNT_POINT" 2>&1 && \
+    echo "S3 Files mounted at $MOUNT_POINT" || \
+    echo "S3 Files mount failed"
 fi
 
 exec python3.11 /app/server.py
